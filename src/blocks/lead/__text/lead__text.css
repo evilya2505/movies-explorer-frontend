@@ -1,0 +1,19 @@
+.lead__text {
+  max-width: 640px;
+}
+
+@media screen and (max-width: 768px) {
+  .lead__text {
+    order: 2;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+@media screen and (max-width: 428px) {
+  .lead__text {
+    max-width: 300px;
+  }
+}

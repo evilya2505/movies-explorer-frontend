@@ -1,0 +1,14 @@
+.cards {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media screen and (max-width: 768px) {
+  .cards {
+    max-width: 708px;
+  }
+}
