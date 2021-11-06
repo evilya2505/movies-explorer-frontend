@@ -23,16 +23,24 @@ function Header({ isLogged, handlePageScroll }) {
     }
   }
 
+  function test() {
+    window.addEventListener('resize', () => {
+      console.log('resize');
+    })
+  }
+
   function renderMenuList() {
     if (isLogged) {
       return (
         <>
           <ul className="header__menu-list">
-            <li className="header__menu-item">
-              <Link to="/" className={location.pathname === '/' ? `header__menu-link header__menu-link_active` : `header__menu-link`}>
-                Главная
-              </Link>
-            </li>
+            {(document.body.clientWidth <= 768 && isOpened) && (
+              <li className="header__menu-item">
+                <Link to="/" className={location.pathname === '/' ? `header__menu-link header__menu-link_active` : `header__menu-link`}>
+                  Главная
+                </Link>
+              </li>
+            )}
             <li className="header__menu-item">
               <Link to="/movies" className={location.pathname === '/movies' ? `header__menu-link header__menu-link_active` : `header__menu-link`}>
                 Фильмы

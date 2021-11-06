@@ -16,6 +16,7 @@ function Profile(props) {
                   placeholder="Введите имя"
                   className="form__item form__item_type_profile"
                   name="userName"
+                  required
                 />
               </div>
 
@@ -28,6 +29,7 @@ function Profile(props) {
                 placeholder="Введите почту"
                 className="form__item form__item_type_profile"
                 name="email"
+                required
                 />
               </div>
             </div>

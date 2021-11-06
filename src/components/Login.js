@@ -18,6 +18,7 @@ function Login(props) {
                 type="text"
                 className="form__item form__item_type_auth"
                 name="email"
+                required
                 />
                 <span className="form__item-error">
                 </span>
@@ -29,6 +30,7 @@ function Login(props) {
                 type="text"
                 className="form__item form__item_type_auth"
                 name="password"
+                required
                 />
                 <span className="form__item-error">
                 </span>
