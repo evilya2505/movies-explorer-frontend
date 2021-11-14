@@ -68,7 +68,7 @@ function Register({ handleRegisterSubmit, isError }) {
                   value={passwordInput.value}
                   onChange={passwordInput.handleInputChange}
                   onFocus={() => {passwordInput.handleOnFocus(true)}}
-                  type="text"
+                  type="password"
                   className="form__item form__item_type_auth"
                   name="password"
                   minLength="2"
