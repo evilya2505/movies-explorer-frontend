@@ -125,8 +125,9 @@
 @import url(./blocks/form/__btn/_type/form__btn_type_text-black.css);
 @import url(./blocks/form/__btn/_type/form__btn_type_text-red.css);
 @import url(./blocks/form/__section-hl/form__section-hl.css);
-@import url(./blocks/form/__btn/_disabled/form__btn_disabled.css);
 @import url(./blocks/form/__btns-error/form__btns-error.css);
+@import url(./blocks/form/__btn/_type/disabled/form__btn_type_rectangle_disabled.css);
+@import url(./blocks/form/__btn/_type/disabled/form__btn_type_text-black_disabled.css);
 
 @import url(./blocks/form-page/form-page.css);
 
@@ -157,4 +158,6 @@
 @import url(./blocks/not-found/__subtitle/not-found__subtitle.css);
 @import url(./blocks/not-found/__link/not-found__link.css);
 
-
+@import url(./blocks/search-error/search-error.css);
+@import url(./blocks/search-error/__img/search-error__img.css);
+@import url(./blocks/search-error/__title/search-error__title.css);

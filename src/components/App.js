@@ -1,20 +1,79 @@
 import React from 'react';
-import { Route, Switch } from 'react-router-dom';
+import { Route, Switch, useHistory, useLocation } from 'react-router-dom';
 import Header from "./Header";
 import Footer from "./Footer";
 import Main from "./Main";
 import Movies from './Movies';
-import SearchForm from './SearchForm';
 import SavedMovies from './SavedMovies';
 import Profile from './Profile';
 import Register from './Register';
 import Login from './Login';
 import NotFound from './NotFound';
+import moviesApi from '../utils/MoviesApi';
+import { sortFilms, returnShortFilmsOnly } from '../utils/utils';
+import mainApi from '../utils/MainApi';
+import { CurrentUserContext } from '../contexts/CurrentUserContext';
+import ProtectedRoute from './ProtectedRoute';
 
 function App() {
   // Стейт-переменная, содержит информацию о статусе пользователя - вошел он в систему или нет
   const [loggedIn, setLoggedIn] = React.useState(true);
   const [isScrollAllowed, setIsScrollAllowed] = React.useState(true)
+  const [searchResult, setSearchResult] = React.useState([]);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [isError, setIsError] = React.useState(false);
+  const [savedFilmsSearchResults, setSavedFilmsSearchResults] = React.useState([]);
+  const [shortFilmsSavedMovies, setShortFilmsSavedMovies] = React.useState([]);
+  const [shortFilmsMovies, setShortFilmsMovies] = React.useState([]);
+  const [isCheckboxSwitchedOn, setIsCheckboxSwitchedOn] = React.useState(false);
+  const [isNotFoundNotificationShown, setIsNotFoundNotificationShown] = React.useState({page: '', state: false});
+
+  // Переменные состояния, отвечающие за данные пользователя и сохраненные фильмы
+  const [currentUser, setCurrentUser] = React.useState({name:'', email: '', _id: ''});
+  const [savedMovies, setSavedMovies] = React.useState([]);
+
+  // Хранит токен текущего пользователя
+  const [token, setToken] = React.useState('');
+
+  const history = useHistory();
+  const location = useLocation();
+
+  // Эффект, вызываемый при монтировании компонента, совершает запрос в API за пользовательскими данными
+  React.useEffect(() => {
+    history.push(location.pathname);
+
+    if (localStorage.getItem('token')) {
+      const jwt = localStorage.getItem('token');
+
+      mainApi.getUserInfo(jwt)
+      .then((data) => {
+        setCurrentUser(data.data);
+        setLoggedIn(true);
+        setToken(jwt);
+
+        if (location.pathname === '/signin') {
+          history.push('/movies');
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+
+      mainApi.getSavedMovies(jwt)
+      .then((savedFilms) => {
+        setSavedMovies(savedFilms.data.reduce((stack, item) => {
+          (item.owner._id === currentUser._id && stack.push(item));
+
+          return stack;
+        }, []));
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+    } else {
+      setLoggedIn(false);
+    }
+  }, [loggedIn, history, currentUser._id, location.pathname]);
 
   function handlePageScroll(isMenuOpened) {
     if (isMenuOpened) {
@@ -24,50 +83,240 @@ function App() {
     }
   }
 
+  function handleSearchButton(keyWord) {
+    setIsNotFoundNotificationShown({page: '', state: false});
+
+    setIsError(false);
+
+    setIsLoading(true);
+    if (location.pathname === '/saved-movies') {
+      const sortedFilms = sortFilms(keyWord, savedMovies);
+
+      setSavedFilmsSearchResults(sortedFilms);
+      (isCheckboxSwitchedOn && setShortFilmsSavedMovies(returnShortFilmsOnly(sortedFilms)));
+
+      if (sortedFilms.length < 1) {
+        setIsNotFoundNotificationShown({page: '/saved-movies', state: true});
+      }
+
+      setIsLoading(false);
+    } else {
+      if (localStorage.getItem('filmData') === null) {
+        moviesApi.getAllFilms()
+        .then((data) => {
+          const allFilms = data;
+          const sortedFilms = sortFilms(keyWord, allFilms);
+
+          localStorage.setItem('filmData', JSON.stringify(data));
+
+          setSearchResult(sortedFilms);
+          (isCheckboxSwitchedOn && setShortFilmsMovies(returnShortFilmsOnly(sortedFilms)));
+
+          if (sortedFilms.length < 1) {
+            setIsNotFoundNotificationShown({page: '/movies', state: true});
+          }
+        })
+        .catch((err) => {
+          console.log(err);
+          setIsError(true);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        })
+      } else {
+        const sortedFilms = sortFilms(keyWord, JSON.parse(localStorage.getItem('filmData')));
+
+        setSearchResult(sortedFilms);
+        (isCheckboxSwitchedOn && setShortFilmsMovies(returnShortFilmsOnly(sortedFilms)));
+
+        if (sortedFilms.length < 1) {
+          setIsNotFoundNotificationShown({page: '/movies', state: true});
+        }
+
+        setIsLoading(false);
+      }
+    }
+  }
+
+  function handleRegisterSubmit(data) {
+    setIsError(false);
+
+    mainApi.register(data.name, data.password, data.email)
+    .then((data) => {
+      history.push('/signin');
+    })
+    .catch((err) => {
+      console.log(err);
+      setIsError(true);
+    })
+  }
+
+  function handleLoginSubmit(data) {
+    setIsError(false);
+
+    mainApi.authorization(data.password, data.email)
+    .then((data) => {
+      setLoggedIn(true);
+      localStorage.setItem('token', data.token);
+    })
+    .catch((err) => {
+      console.log(err);
+      setIsError(true);
+    })
+  }
+
+  function handleEditProfileSubmit(data) {
+    setIsError(false);
+
+    mainApi.updateUserInfo(data, token)
+    .then((data) => {
+      setCurrentUser(data.data);
+    })
+    .catch((err) => {
+      console.log(err);
+      setIsError(true);
+    });
+  }
+
+  function handleLikeBtnClick(film) {
+    mainApi.postFilm(film, token)
+    .then((data) => {
+      setSavedMovies((prevState) => [...prevState, data.data]);
+
+      (isCheckboxSwitchedOn && setShortFilmsSavedMovies((prevState) => [...prevState, data.data]));
+    })
+    .catch((err) => {
+      console.log(err);
+    })
+  }
+
+  function handleDeleteBtnClick(filmData) {
+    mainApi.deleteCard(filmData, token)
+    .then((data) => {
+      setSavedMovies((state) => state.filter((c) => c._id !== filmData._id));
+
+      (isCheckboxSwitchedOn && setShortFilmsSavedMovies((state) => state.filter((c) => c._id !== filmData._id)));
+    })
+    .catch((err) => {
+      console.log(err);
+    })
+  }
+
+  function handleShortFilmsOn(isChecked) {
+    setShortFilmsMovies([]);
+    setShortFilmsSavedMovies([]);
+    setIsCheckboxSwitchedOn(false);
+
+    if (isChecked) {
+      let shortFilms = [];
+      setIsCheckboxSwitchedOn(true);
+
+      switch (location.pathname) {
+        case '/saved-movies':
+          if (savedFilmsSearchResults.length > 0) {
+            shortFilms = returnShortFilmsOnly(savedFilmsSearchResults);
+
+          } else {
+            shortFilms = returnShortFilmsOnly(savedMovies);
+          }
+          break;
+
+        case '/movies':
+          if (searchResult.length > 0) {
+            shortFilms = returnShortFilmsOnly(searchResult);
+          }
+          break;
+
+        default:
+          break;
+      }
+
+      (location.pathname === '/saved-movies' ? setShortFilmsSavedMovies(shortFilms) : setShortFilmsMovies(shortFilms))
+    }
+  }
+
+  function handleSignOut() {
+    setLoggedIn(false);
+    localStorage.removeItem('token');
+  }
+
   return (
-    <div className={isScrollAllowed ? `page` : `page page_type_no-scroll`}>
-        <Switch>
+    <CurrentUserContext.Provider value={currentUser}>
+      <div className={isScrollAllowed ? `page` : `page page_type_no-scroll`}>
+          <Switch>
 
-          <Route exact path="/">
-            <Header isLogged={loggedIn} handlePageScroll={handlePageScroll}/>
-              <Main />
-            <Footer />
-          </Route>
+            <Route exact path="/">
+              <Header loggedIn={loggedIn} handlePageScroll={handlePageScroll}/>
+                <Main />
+              <Footer />
+            </Route>
 
-          <Route exact path="/movies">
-            <Header isLogged={loggedIn} handlePageScroll={handlePageScroll}/>
-              <SearchForm />
-              <Movies />
-            <Footer />
-          </Route>
+            <ProtectedRoute
+              exact path="/movies"
+              loggedIn={loggedIn}
+              handlePageScroll={handlePageScroll}
+              handleSearchButton={handleSearchButton}
+              searchResult={searchResult}
+              isLoading={isLoading}
+              isError={isError}
+              component={Movies}
+              handleLikeBtnClick={handleLikeBtnClick}
+              handleDeleteBtnClick={handleDeleteBtnClick}
+              savedMovies={savedMovies}
+              handleShortFilmsOn={handleShortFilmsOn}
+              shortFilmsMovies={shortFilmsMovies}
+              isCheckboxSwitchedOn={isCheckboxSwitchedOn}
+              isNotFoundNotificationShown={isNotFoundNotificationShown}
+            />
 
-          <Route exact path="/saved-movies">
-            <Header isLogged={loggedIn} handlePageScroll={handlePageScroll}/>
-              <SearchForm />
-              <SavedMovies />
-            <Footer />
-          </Route>
+            <ProtectedRoute
+              exact path="/saved-movies"
+              loggedIn={loggedIn}
+              handlePageScroll={handlePageScroll}
+              handleSearchButton={handleSearchButton}
+              isLoading={isLoading}
+              isError={isError}
+              searchResult={savedFilmsSearchResults}
+              component={SavedMovies}
+              savedMovies={savedMovies}
+              handleDeleteBtnClick={handleDeleteBtnClick}
+              handleShortFilmsOn={handleShortFilmsOn}
+              shortFilmsSavedMovies={shortFilmsSavedMovies}
+              isCheckboxSwitchedOn={isCheckboxSwitchedOn}
+              isNotFoundNotificationShown={isNotFoundNotificationShown}
+            />
 
-          <Route exact path="/profile">
-          <Header isLogged={loggedIn} handlePageScroll={handlePageScroll}/>
-            <Profile />
-          </Route>
+            <ProtectedRoute
+              exact path="/profile"
+              loggedIn={loggedIn}
+              handlePageScroll={handlePageScroll}
+              component={Profile}
+              handleEditProfileSubmit={handleEditProfileSubmit}
+              isError={isError}
+              handleSignOut={handleSignOut}
+            />
 
-          <Route exact path="/signin">
-            <Login />
-          </Route>
+            <Route exact path="/signin">
+              <Login
+                handleLoginSubmit={handleLoginSubmit}
+                isError={isError}
+              />
+            </Route>
 
-          <Route exact path="/signup">
-            <Register />
-          </Route>
+            <Route exact path="/signup">
+              <Register
+                handleRegisterSubmit={handleRegisterSubmit}
+                isError={isError} />
+            </Route>
 
-          <Route path="/">
-            <NotFound />
-          </Route>
+            <Route path="/">
+              <NotFound />
+            </Route>
 
-        </Switch>
+          </Switch>
 
-    </div>
+      </div>
+    </CurrentUserContext.Provider>
   );
 }
 

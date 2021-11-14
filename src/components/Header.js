@@ -3,7 +3,7 @@ import authorizedLogoPath from '../images/logo.svg';
 import loginPath from '../images/login.svg';
 import { Link, useLocation, Redirect } from 'react-router-dom';
 
-function Header({ isLogged, handlePageScroll }) {
+function Header({ loggedIn, handlePageScroll }) {
   const [isOpened, setIsOpened] = React.useState(false);
   const location = useLocation();
 
@@ -23,14 +23,8 @@ function Header({ isLogged, handlePageScroll }) {
     }
   }
 
-  function test() {
-    window.addEventListener('resize', () => {
-      console.log('resize');
-    })
-  }
-
   function renderMenuList() {
-    if (isLogged) {
+    if (loggedIn) {
       return (
         <>
           <ul className="header__menu-list">
@@ -81,7 +75,7 @@ function Header({ isLogged, handlePageScroll }) {
 
   return (
     <div className={location.pathname === '/' ? 'page__header-wrapper page__header-wrapper_type_colored' : 'page__header-wrapper'}>
-    <header className={isLogged ? `header page__header` : `header page__header header_type_unauth`}>
+    <header className={loggedIn ? `header page__header` : `header page__header header_type_unauth`}>
       <Link to="/" className="header__link">
         <img src={authorizedLogoPath} alt="изображение логотипа" className="header__logo" />
       </Link>

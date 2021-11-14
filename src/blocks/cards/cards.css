@@ -5,6 +5,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
+
+  min-height: calc(100vh - 303px - 77px - 177px);
 }
 
 @media screen and (max-width: 768px) {
