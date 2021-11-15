@@ -128,6 +128,7 @@
 @import url(./blocks/form/__btns-error/form__btns-error.css);
 @import url(./blocks/form/__btn/_type/disabled/form__btn_type_rectangle_disabled.css);
 @import url(./blocks/form/__btn/_type/disabled/form__btn_type_text-black_disabled.css);
+@import url(./blocks/form/__btns-success/form__btns-success.css);
 
 @import url(./blocks/form-page/form-page.css);
 

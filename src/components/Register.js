@@ -3,7 +3,7 @@ import logoPath from '../images/logo.svg';
 import { Link } from 'react-router-dom';
 import useInput from "./hooks/useInput";
 
-function Register({ handleRegisterSubmit, isError }) {
+function Register({ isSending, handleRegisterSubmit, isError }) {
   const nameInput = useInput('', {isEmpty: true, minLength: 2, isName: true});
   const emailInput = useInput('', {isEmpty: true, minLength: 2, isEmail: true});
   const passwordInput = useInput('', {isEmpty: true, minLength: 2});
@@ -38,6 +38,7 @@ function Register({ handleRegisterSubmit, isError }) {
                   name="userName"
                   minLength="2"
                   maxLength="30"
+                  readOnly={isSending}
                   required
                 />
                 <span className="form__item-error">
@@ -55,6 +56,7 @@ function Register({ handleRegisterSubmit, isError }) {
                   className="form__item form__item_type_auth"
                   name="email"
                   minLength="2"
+                  readOnly={isSending}
                   required
                 />
                 <span className="form__item-error">
@@ -72,6 +74,7 @@ function Register({ handleRegisterSubmit, isError }) {
                   className="form__item form__item_type_auth"
                   name="password"
                   minLength="2"
+                  readOnly={isSending}
                   required
                 />
                 <span className="form__item-error">
@@ -83,13 +86,13 @@ function Register({ handleRegisterSubmit, isError }) {
               <span className="form__btns-error">{isError ? 'Произошла ошибка. Попробуйте снова.' : ''}</span>
               <button
                 type="submit"
-                className={(nameInput.inputValid && emailInput.inputValid && passwordInput.inputValid) ? `form__btn form__btn_type_rectangle` : `form__btn form__btn_type_rectangle form__btn_type_rectangle_disabled`}
+                className={(nameInput.inputValid && emailInput.inputValid && passwordInput.inputValid && !isSending) ? `form__btn form__btn_type_rectangle` : `form__btn form__btn_type_rectangle form__btn_type_rectangle_disabled`}
               >
                 Зарегистрироваться
               </button>
               <p className="form__subtitle">
                   Уже зарегистрированы?
-                  <Link to="/signin" className="form__link">Войти</Link>
+                  <Link to="/signin" className="form__link"> Войти</Link>
               </p>
             </div>
         </fieldset>

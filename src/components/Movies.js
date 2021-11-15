@@ -57,7 +57,6 @@ function Movies({ isNotFoundNotificationShown, isCheckboxSwitchedOn, shortFilmsM
       />
       <section className="cards content__cards">
         {isLoading ? <Preloader /> : ''}
-        {console.log(isNotFoundNotificationShown)}
         {(isNotFoundNotificationShown.page === '/movies' && isNotFoundNotificationShown.state === true) ? <NoResultsError /> : ''}
         {isError
         ? <SearchError />

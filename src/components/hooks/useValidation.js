@@ -1,5 +1,4 @@
 import React from 'react';
-const validator = require("email-validator");
 
 export default function useValidation(value, initialState, validations) {
   const [isEmpty, setEmpty] = React.useState(true);
@@ -35,7 +34,8 @@ export default function useValidation(value, initialState, validations) {
           break;
 
         case 'isEmail':
-          if (validator.validate(value)) {
+          const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+          if (re.test(String(value).toLowerCase())) {
             setErrorText('');
             setEmailError(false);
           } else {
@@ -67,18 +67,19 @@ export default function useValidation(value, initialState, validations) {
           break;
       }
     }
-  }, [value, validations]);
+  }, [value, validations, initialState]);
 
   React.useEffect(() => {
-    if (isEmpty || minLengthError || isEmailError || isNameError || isSameError) {
+    if (isEmpty || minLengthError || isEmailError || isNameError) {
       setInputValid(false);
     } else {
       setInputValid(true);
     }
-  }, [isEmpty, minLengthError, isEmailError, isNameError, isSameError]);
+  }, [isEmpty, minLengthError, isEmailError, isNameError]);
 
   return {
     errorText,
-    inputValid
+    inputValid,
+    isSameError
   }
 }

@@ -3,7 +3,7 @@ import logoPath from '../images/logo.svg';
 import { Link } from 'react-router-dom';
 import useInput from "./hooks/useInput";
 
-function Login({ handleLoginSubmit, isError }) {
+function Login({ isSending, handleLoginSubmit, isError }) {
   const emailInput = useInput('', {isEmpty: true, minLength: 2, isEmail: true});
   const passwordInput = useInput('', {isEmpty: true, minLength: 2});
 
@@ -35,6 +35,7 @@ function Login({ handleLoginSubmit, isError }) {
                   type="text"
                   className="form__item form__item_type_auth"
                   name="email"
+                  readOnly={isSending}
                   required
                 />
                 <span className="form__item-error">
@@ -51,6 +52,7 @@ function Login({ handleLoginSubmit, isError }) {
                   type="password"
                   className="form__item form__item_type_auth"
                   name="password"
+                  readOnly={isSending}
                   required
                 />
                 <span className="form__item-error">
@@ -62,7 +64,9 @@ function Login({ handleLoginSubmit, isError }) {
               <span className="form__btns-error">{isError ? 'Произошла ошибка. Попробуйте снова.' : ''}</span>
               <button
                 type="submit"
-                className={(emailInput.inputValid && passwordInput.inputValid) ? `form__btn form__btn_type_rectangle` : `form__btn form__btn_type_rectangle form__btn_type_rectangle_disabled`}
+                className={(emailInput.inputValid && passwordInput.inputValid && !isSending)
+                  ? `form__btn form__btn_type_rectangle`
+                  : `form__btn form__btn_type_rectangle form__btn_type_rectangle_disabled`}
               >
                 Войти
               </button>

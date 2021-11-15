@@ -22,6 +22,8 @@ function App() {
   const [searchResult, setSearchResult] = React.useState([]);
   const [isLoading, setIsLoading] = React.useState(false);
   const [isError, setIsError] = React.useState(false);
+  const [isSuccess, setIsSuccess] = React.useState(false);
+  const [isSending, setIsSending] = React.useState(false);
   const [savedFilmsSearchResults, setSavedFilmsSearchResults] = React.useState([]);
   const [shortFilmsSavedMovies, setShortFilmsSavedMovies] = React.useState([]);
   const [shortFilmsMovies, setShortFilmsMovies] = React.useState([]);
@@ -40,8 +42,6 @@ function App() {
 
   // Эффект, вызываемый при монтировании компонента, совершает запрос в API за пользовательскими данными
   React.useEffect(() => {
-    history.push(location.pathname);
-
     if (localStorage.getItem('token')) {
       const jwt = localStorage.getItem('token');
 
@@ -50,16 +50,19 @@ function App() {
         setCurrentUser(data.data);
         setLoggedIn(true);
         setToken(jwt);
-
-        if (location.pathname === '/signin') {
-          history.push('/movies');
-        }
       })
       .catch((err) => {
+        setLoggedIn(false);
         console.log(err);
       });
+    } else {
+      setLoggedIn(false);
+    }
+  }, []);
 
-      mainApi.getSavedMovies(jwt)
+  React.useEffect(() => {
+    if (loggedIn && token) {
+      mainApi.getSavedMovies(token)
       .then((savedFilms) => {
         setSavedMovies(savedFilms.data.reduce((stack, item) => {
           (item.owner._id === currentUser._id && stack.push(item));
@@ -70,10 +73,16 @@ function App() {
       .catch((err) => {
         console.log(err);
       });
-    } else {
-      setLoggedIn(false);
     }
-  }, [loggedIn, history, currentUser._id, location.pathname]);
+  }, [token, loggedIn, currentUser._id]);
+
+  React.useEffect(() => {
+    if (loggedIn) {
+      if (location.pathname === '/signin' || location.pathname === '/signup') {
+        history.push('/movies');
+      }
+    }
+  }, [location.pathname, loggedIn, history, token]);
 
   function handlePageScroll(isMenuOpened) {
     if (isMenuOpened) {
@@ -140,19 +149,24 @@ function App() {
 
   function handleRegisterSubmit(data) {
     setIsError(false);
+    setIsSending(true);
 
     mainApi.register(data.name, data.password, data.email)
-    .then((data) => {
-      history.push('/signin');
+    .then((dataRes) => {
+      handleLoginSubmit({ password: data.password, email: data.email });
     })
     .catch((err) => {
       console.log(err);
       setIsError(true);
     })
+    .finally(() => {
+      setIsSending(false);
+    })
   }
 
   function handleLoginSubmit(data) {
     setIsError(false);
+    setIsSending(true);
 
     mainApi.authorization(data.password, data.email)
     .then((data) => {
@@ -163,18 +177,27 @@ function App() {
       console.log(err);
       setIsError(true);
     })
+    .finally(() => {
+      setIsSending(false);
+    })
   }
 
   function handleEditProfileSubmit(data) {
     setIsError(false);
+    setIsSuccess(false);
+    setIsSending(true);
 
     mainApi.updateUserInfo(data, token)
     .then((data) => {
       setCurrentUser(data.data);
+      setIsSuccess(true);
     })
     .catch((err) => {
       console.log(err);
       setIsError(true);
+    })
+    .finally(() => {
+      setIsSending(false);
     });
   }
 
@@ -294,19 +317,24 @@ function App() {
               handleEditProfileSubmit={handleEditProfileSubmit}
               isError={isError}
               handleSignOut={handleSignOut}
+              isSuccess={isSuccess}
+              isSending={isSending}
             />
 
             <Route exact path="/signin">
               <Login
                 handleLoginSubmit={handleLoginSubmit}
                 isError={isError}
+                isSending={isSending}
               />
             </Route>
 
             <Route exact path="/signup">
               <Register
                 handleRegisterSubmit={handleRegisterSubmit}
-                isError={isError} />
+                isError={isError}
+                isSending={isSending}
+            />
             </Route>
 
             <Route path="/">

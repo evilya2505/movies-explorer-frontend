@@ -3,7 +3,7 @@ import Header from "./Header";
 import { CurrentUserContext } from '../contexts/CurrentUserContext';
 import useInput from "./hooks/useInput";
 
-function Profile({ handleSignOut, loggedIn, handlePageScroll, isError, handleEditProfileSubmit }) {
+function Profile({ isSending, isSuccess, handleSignOut, loggedIn, handlePageScroll, isError, handleEditProfileSubmit }) {
   // Подписывание компонента CurrentUserContext и получение значение контекста
   const currentUser = React.useContext(CurrentUserContext);
   const nameInput = useInput(currentUser.name, {isEmpty: true, minLength: 2, isName: true, isSame: true});
@@ -46,6 +46,7 @@ function Profile({ handleSignOut, loggedIn, handlePageScroll, isError, handleEdi
                     className="form__item form__item_type_profile"
                     name="userName"
                     required
+                    readOnly={isSending}
                   />
                 </div>
                 <span className="form__item-error">
@@ -65,6 +66,7 @@ function Profile({ handleSignOut, loggedIn, handlePageScroll, isError, handleEdi
                     className="form__item form__item_type_profile"
                     name="email"
                     required
+                    readOnly={isSending}
                   />
                 </div>
                 <span className="form__item-error">
@@ -73,9 +75,10 @@ function Profile({ handleSignOut, loggedIn, handlePageScroll, isError, handleEdi
               </div>
               <div className="form__btns">
                 <span className="form__btns-error">{isError ? 'Произошла ошибка. Попробуйте снова.' : ''}</span>
+                <span className="form__btns-success">{isSuccess ? 'Изменения успешно внесены.' : ''}</span>
                 <button
                   type="submit"
-                  className={(nameInput.inputValid && emailInput.inputValid)
+                  className={((nameInput.inputValid && emailInput.inputValid) && !(nameInput.isSameError && emailInput.isSameError) && (!isSending))
                     ? `form__btn form__btn_type_text-black`
                     : `form__btn form__btn_type_text-black form__btn_type_text-black_disabled`}
                 >
