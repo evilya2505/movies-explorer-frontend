@@ -47,7 +47,6 @@ function App() {
 
       mainApi.getUserInfo(jwt)
       .then((data) => {
-        setCurrentUser(data.data);
         setLoggedIn(true);
         setToken(jwt);
       })
@@ -62,19 +61,21 @@ function App() {
 
   React.useEffect(() => {
     if (loggedIn && token) {
-      mainApi.getSavedMovies(token)
-      .then((savedFilms) => {
-        setSavedMovies(savedFilms.data.reduce((stack, item) => {
-          (item.owner._id === currentUser._id && stack.push(item));
+      mainApi.getInitialData(token)
+      .then(([ userData, savedMoviesData ]) => {
+        setSavedMovies(savedMoviesData.data.reduce((stack, item) => {
+          (item.owner._id === userData.data._id && stack.push(item));
 
           return stack;
         }, []));
+
+        setCurrentUser(userData.data);
       })
       .catch((err) => {
         console.log(err);
       });
     }
-  }, [token, loggedIn, currentUser._id]);
+  }, [token, loggedIn]);
 
   React.useEffect(() => {
     if (loggedIn) {
@@ -82,7 +83,7 @@ function App() {
         history.push('/movies');
       }
     }
-  }, [location.pathname, loggedIn, history, token]);
+  }, [location.pathname, loggedIn, history]);
 
   function handlePageScroll(isMenuOpened) {
     if (isMenuOpened) {
@@ -171,6 +172,7 @@ function App() {
     mainApi.authorization(data.password, data.email)
     .then((data) => {
       setLoggedIn(true);
+      setToken(data.token);
       localStorage.setItem('token', data.token);
     })
     .catch((err) => {

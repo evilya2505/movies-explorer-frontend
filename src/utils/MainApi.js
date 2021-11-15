@@ -116,6 +116,10 @@ class MainApi {
     })
     .then(this._getRequestResult);
   }
+
+  getInitialData(token) {
+    return Promise.all([this.getUserInfo(token), this.getSavedMovies(token)]);
+  }
 }
 
 // Создание экземпляра класса Api
